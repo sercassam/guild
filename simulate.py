@@ -19,7 +19,7 @@ def _GetArmoryString(t):
   return 'armory={},{},{}'.format(t.locale, t.realm, t.name)
 
 
-def RunSimCOnToon(toon, out_filepath):
+def _RunSimCOnToon(toon, out_filepath):
   outfile = open(out_filepath, 'w+')
   fnull = open(os.devnull, "w")
 
@@ -36,7 +36,7 @@ def RunSimCOnToon(toon, out_filepath):
   call(command, stdout=outfile, stderr=fnull)
 
 
-def ParseAllDPSFromFile(filename):
+def _ParseAllDPSFromFile(filename):
   with open(filename, 'r') as f:
     lines = f.readlines()
     dps_map = {}
@@ -61,16 +61,12 @@ def ParseAllDPSFromFile(filename):
     return dps_map
 
 
-def _SimulateAndParseDPS(toon):
+def SimulateAndParseDPS(toon):
   temp_filepath = os.path.join(TMP_SIMS_PATH, toon.DebugString())
-  RunSimCOnToon(toon, temp_filepath)
-  all_dps = ParseAllDPSFromFile(temp_filepath)
+  _RunSimCOnToon(toon, temp_filepath)
+  all_dps = _ParseAllDPSFromFile(temp_filepath)
 
   return all_dps.popitem() if len(all_dps) > 0 else None
-
-
-def _GenerateAllTalentPermutations():
-  return numerical_util.GenerateAllDigitPermutations(3, 7)
 
 
 def _ParseTalentsFromProfile(filename):
@@ -89,6 +85,7 @@ def _ParseTalentsFromProfile(filename):
         return ''.join(std_talents)
 
 
+# Fetch a character from armory. Populates all missing info for the character.
 def _FetchToonFromArmory(toon):
   armory_path = os.path.join(TMP_ARMORY_PATH, toon.ArmoryFileName())
   command = [SIMC_PATH, _GetArmoryString(toon), "save={}".format(armory_path)]
@@ -99,7 +96,7 @@ def _FetchToonFromArmory(toon):
   toon.talents = _ParseTalentsFromProfile(armory_path)
 
 
-def _FetchToonsFromArmory(toons):
+def FetchToonsFromArmory(toons):
   if not os.path.exists(TMP_ARMORY_PATH):
     os.mkdir(TMP_ARMORY_PATH)
 
@@ -117,7 +114,7 @@ def _FetchToonsFromArmory(toons):
 if __name__ == '__main__':
   members = ['tiryas', 'myspeld', 'drifter', 'sengshi']
   repr_toons = map(Character, members)
-  _FetchToonsFromArmory(repr_toons)
+  FetchToonsFromArmory(repr_toons)
 
   toons = []
   for toon in repr_toons:
@@ -135,6 +132,6 @@ if __name__ == '__main__':
   index = 0
 
   tp = Pool(8)
-  result = tp.map(_SimulateAndParseDPS, toons)
+  result = tp.map(SimulateAndParseDPS, toons)
   for r in result:
     print r
