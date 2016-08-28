@@ -56,7 +56,7 @@ def ParseAllDPSFromFile(filename):
         name = split_line[2]
 
         if name.lower() != 'raid':
-          dps_map[name.lower()] = int(dps)
+          dps_map[filename] = int(dps)
 
     return dps_map
 
@@ -135,4 +135,6 @@ if __name__ == '__main__':
   index = 0
 
   tp = Pool(8)
-  print tp.map(_SimulateAndParseDPS, toons)
+  result = tp.map(_SimulateAndParseDPS, toons)
+  for r in result:
+    print r
